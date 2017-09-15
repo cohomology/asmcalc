@@ -1,9 +1,14 @@
+/* vim: ft=gas : 
+*/ 
 # Mini calculator and parser written in x86_64 assembly for Linux with SSE instructions
 # (c) by Kilian Kilger, 2017
 
 .data
 
-line_counter_string: .byte '[, '0, '], ':, 0x20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+.fill 15, 1, 0
+line_counter_string: .byte '[ 
+.align 16
+line_counter_content: .byte '0, '], ':, 0x20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
 .bss
 
@@ -43,9 +48,9 @@ inc_loop:       incb 1(%rbx, %rcx)                      # ++*($rbx + $rcx + 1);
                 decl %ecx                               # --$rcx; 
 		jmp inc_loop                            # goto inc_loop;
 
-move:   	movdqu 1(%rbx), %xmm0              	# memcpy($xmm0, $rbx + 1, 16);
+move:   	movdqa 1(%rbx), %xmm0              	# memcpy($xmm0, $rbx + 1, 16);
         	pslldq $1, %xmm0                   	# $xmm0 >>= 16;                           	# shift left in register yields shift right in memory
-        	movdqu %xmm0, 1(%rbx)              	# memcpy($rbx + 1, $xmm0, 16); 
+        	movdqa %xmm0, 1(%rbx)              	# memcpy($rbx + 1, $xmm0, 16); 
         	movb $'1, 1(%rbx)                  	# *($rbx + 1) = '1';
         	incl %r10d                         	# ++r10; 
         	jmp main_loop                           # goto main_loop; 
