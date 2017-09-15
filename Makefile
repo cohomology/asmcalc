@@ -3,13 +3,19 @@ LDFLAGS ?=
 AS ?= as
 ASFLAGS ?= -gwarf-2 --64
 OBJCOPY ?= objcopy
+OBJDUMP ?= objdump
 
 asmcalc: main.o
 	$(LD) $(LDFLAGS) -o $@ main.o
-	$(OBJCOPY) -O binary main.o asmcalc.bin
+	$(OBJCOPY) --dump-section .text=$@.bin main.o 
 
 main.o: src/main.asm 
 	$(AS) $(ASFLAGS) -a=$(basename $(notdir $<)).lst -o $@ $<
+
+.PHONY: disassemble
+disassemble: asmcalc
+	$(OBJDUMP) -d asmcalc 
+	$(OBJDUMP) -s -j .data asmcalc
 
 .PHONY: clean
 clean: 
