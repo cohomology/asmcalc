@@ -1,14 +1,18 @@
 /* vim: ft=gas : 
 */ 
 # Mini calculator and parser written in x86_64 assembly for Linux with SSE instructions
-# (c) by Kilian Kilger, 2017
+# (c) by Cohomology@github, 2017
 
 .data
 
+help_string: .asciz "This is asmcalc. Type \"exit\" to quit.\n"
+.align 16
 .fill 15, 1, 0
 line_counter_string: .byte '[ 
 .align 16
 line_counter_content: .byte '0, '], ':, 0x20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+exit_string: .ascii "exit\n"
+.fill 11, 1, 0
 
 .bss
 
@@ -18,6 +22,12 @@ line_counter_content: .byte '0, '], ':, 0x20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 .global _start
 
 _start:
+                movl $1, %eax                           # 1 = write syscall
+                movl $1, %edi                           # 1 = stdout 
+                movq $help_string, %rsi                 # string to write
+                movl $38, %edx                          # length of string 
+                syscall                                 # write(stdout, $help_string, 38);
+
         	movq $line_counter_string, %rbx  	# $rbx = $line_counter_string
         	xorl %r10d, %r10d                	# $r10 = 0;
 
@@ -38,6 +48,8 @@ main_loop:
         	movl $256, %edx                     	# length of string
         	syscall                             	# read(stdin, $input_line, 256);
 
+                call parse_and_compute                  # parse and compute	
+
 	        movl %r10d, %ecx                        # $rcx = $r10d;
 inc_loop:       incb 1(%rbx, %rcx)                      # ++*($rbx + $rcx + 1);
 		cmpb $'9, 1(%rbx, %rcx)                 # if (*($rbx + $rcx + 1) <= '9')
@@ -54,3 +66,16 @@ move:   	movdqa 1(%rbx), %xmm0              	# memcpy($xmm0, $rbx + 1, 16);
         	movb $'1, 1(%rbx)                  	# *($rbx + 1) = '1';
         	incl %r10d                         	# ++r10; 
         	jmp main_loop                           # goto main_loop; 
+
+parse_and_compute:
+                movq input_line, %rax                   # memcpy($rax, $input_line, 8);
+                movq exit_string, %rdi                  # memcpy($rdi, $exit_string, 8);
+                movq $0x000000FFFFFFFFFF, %rsi          # memcpy($rsi, $0x000000FFFFFFFFFF, 8);
+                andq %rsi, %rax                         # $rax &= $rsi;
+                cmpq %rdi, %rax                         # if (memcmp($rax, $rdi, 8) == 0)
+                je exit                                 #   goto exit
+                ret                                     # return;
+
+exit:           movl $60, %eax                          # exit syscall
+                xor %edi, %edi                          # return code 0  
+                syscall                                 # exit(0)
