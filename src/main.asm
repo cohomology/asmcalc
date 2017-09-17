@@ -69,11 +69,10 @@ move:   	movdqa 1(%rbx), %xmm0              	# memcpy($xmm0, $rbx + 1, 16);
 
 parse_and_compute:
                 movq input_line, %rax                   # memcpy($rax, $input_line, 8);
-                movq exit_string, %rdi                  # memcpy($rdi, $exit_string, 8);
                 movq $0x000000FFFFFFFFFF, %rsi          # memcpy($rsi, $0x000000FFFFFFFFFF, 8);
                 andq %rsi, %rax                         # $rax &= $rsi;
-                cmpq %rdi, %rax                         # if (memcmp($rax, $rdi, 8) == 0)
-                je exit                                 #   goto exit
+                cmpq exit_string, %rax                  # if (memcmp($rax, $rdi, 8) == 0)
+                je exit                                 #   goto exit;
                 ret                                     # return;
 
 exit:           movl $60, %eax                          # exit syscall
