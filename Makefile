@@ -16,6 +16,7 @@ main.o: src/main.asm
 disassemble: asmcalc
 	$(OBJDUMP) -d asmcalc 
 	$(OBJDUMP) -s -j .data asmcalc
+	$(OBJDUMP) -s -j .rodata asmcalc
 
 .PHONY: clean
 clean: 

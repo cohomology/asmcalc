@@ -3,16 +3,18 @@
 # Mini calculator and parser written in x86_64 assembly for Linux with SSE instructions
 # (c) by Cohomology@github, 2017
 
-.data
-
+.section .rodata
+.align 16
+exit_string: .ascii "exit\n"
+.fill 11, 1, 0
 help_string: .asciz "This is asmcalc. Type \"exit\" to quit.\n"
+
+.data
 .align 16
 .fill 15, 1, 0
 line_counter_string: .byte '[ 
 .align 16
 line_counter_content: .byte '0, '], ':, 0x20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-exit_string: .ascii "exit\n"
-.fill 11, 1, 0
 
 .bss
 
