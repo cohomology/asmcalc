@@ -23,13 +23,14 @@ exit_string: .ascii "exit\n"
 
 _start:
                 movl $1, %eax                           # 1 = write syscall
-                movl $1, %edi                           # 1 = stdout 
+                movl $1, %edi                           # 1 = stdout
                 movq $help_string, %rsi                 # string to write
                 movl $38, %edx                          # length of string 
                 syscall                                 # write(stdout, $help_string, 38);
 
         	movq $line_counter_string, %rbx  	# $rbx = $line_counter_string
         	xorl %r10d, %r10d                	# $r10 = 0;
+                movdqa exit_string, %xmm15              # strcpy($xmm15, $exit_string, 16); 
 
 # In the main loop, a line counter is shown to the user and an input is expected. The line counter is not counted in a numeric way internally,
 # but is directly increased as a character string. For this, the "inc" command is rewritten in assembly for decimal numbers. If the length of the
@@ -65,14 +66,12 @@ move:   	movdqa 1(%rbx), %xmm0              	# memcpy($xmm0, $rbx + 1, 16);
         	movdqa %xmm0, 1(%rbx)              	# memcpy($rbx + 1, $xmm0, 16); 
         	movb $'1, 1(%rbx)                  	# *($rbx + 1) = '1';
         	incl %r10d                         	# ++r10; 
-        	jmp main_loop                           # goto main_loop; 
+                jmp main_loop                           # goto main_loop
 
 parse_and_compute:
-                movq input_line, %rax                   # memcpy($rax, $input_line, 8);
-                movq $0x000000FFFFFFFFFF, %rsi          # memcpy($rsi, $0x000000FFFFFFFFFF, 8);
-                andq %rsi, %rax                         # $rax &= $rsi;
-                cmpq exit_string, %rax                  # if (memcmp($rax, $rdi, 8) == 0)
-                je exit                                 #   goto exit;
+                pcmpistri $0b011000, input_line, %xmm15 # $ecx = first_different_char_of($input_line, $exit_string) 
+                cmp $4, %ecx                            # if ($ecx > 4)
+                ja exit                                 #   goto exit;
                 ret                                     # return;
 
 exit:           movl $60, %eax                          # exit syscall
